@@ -1,0 +1,23 @@
+import mongoose from "mongoose";
+
+const departmentSchema = mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        required: true
+    }
+},
+
+ { 
+    timestamps: true
+ })
+
+
+ const Department = mongoose.model('Department', departmentSchema);
+
+ export default Department;
