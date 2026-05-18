@@ -2,34 +2,51 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDb from './config/connectDb.js';
+import seed from './config/seed.js';
 import initSwagger from './swagger.js';
-import userRoutes from './auth/route/userRoute.js';
+
+// Route imports
+import userRoutes       from './auth/route/userRoute.js';
 import departmentRoutes from './auth/route/departmentRoute.js';
+import surveyRoutes     from './sondage/route/surveyRoute.js';
+import formationRoutes  from './formation/route/formationRoute.js';
+import roleRoutes       from './appConfig/route/roleRoute.js';
+import configRoutes     from './appConfig/route/configRoute.js';
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// CORS — allow the Nuxt frontend
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true
+}));
+
 app.use(express.json());
 
+// Swagger docs
 initSwagger(app);
 
-app.use('/api/users', userRoutes);
+// API routes
+app.use('/api/users',       userRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/surveys',     surveyRoutes);
+app.use('/api/formations',  formationRoutes);
+app.use('/api/roles',       roleRoutes);
+app.use('/api/config',      configRoutes);
 
-app.get('/', (req, res) => {
-    res.send('API RH fonctionne');
-});
+app.get('/', (req, res) => res.json({ message: 'API RH opérationnelle', version: '2.0' }));
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-    await connectDb();
-    app.listen(PORT, () => {
-        console.log(`Serveur démarré sur le port ${PORT}`);
-        console.log(`Swagger disponible sur http://localhost:${PORT}/api-docs`);
-    });
+  await connectDb();
+  await seed(); // Initialise les données par défaut si la base est vide
+  app.listen(PORT, () => {
+    console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+    console.log(`📚 Swagger disponible sur http://localhost:${PORT}/api-docs`);
+  });
 };
 
 startServer();

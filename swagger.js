@@ -12,7 +12,10 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:5000",
+        url: process.env.NODE_ENV === 'production'
+          ? 'https://back-pixel-perfect.onrender.com'
+          : `http://localhost:${process.env.PORT || 5000}`,
+        description: process.env.NODE_ENV === 'production' ? 'Serveur production' : 'Serveur local',
       },
     ],
 
@@ -33,9 +36,12 @@ const options = {
     ],
   },
 
-  apis: ["./routes/*.js",
-      './auth/route/*.js',
-      './schemas/*.js'
+  apis: [
+    './auth/route/*.js',
+    './appConfig/route/*.js',
+    './sondage/route/*.js',
+    './formation/route/*.js',
+    './schemas/*.js'
   ],
 };
 
