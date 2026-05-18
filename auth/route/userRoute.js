@@ -116,7 +116,7 @@ router.post('/login', loginUser);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/register', authMiddleware(['admin']), registerUser);
+router.post('/register', registerUser);
 
 /**
  * @swagger
