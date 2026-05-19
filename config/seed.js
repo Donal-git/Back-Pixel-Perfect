@@ -3,7 +3,7 @@ import User from '../auth/model/User.js';
 import Department from '../auth/model/Departments.js';
 import Role from '../appConfig/model/Role.js';
 import AppConfig from '../appConfig/model/AppConfig.js';
-import Survey from '../sondage/model/Survey.js';
+import Survey from '../surveys/model/Survey.js';
 import Formation from '../formation/model/Formation.js';
 
 // ─── Departments ─────────────────────────────────────────────────────────────

@@ -39,7 +39,7 @@ const options = {
   apis: [
     './auth/route/*.js',
     './appConfig/route/*.js',
-    './sondage/route/*.js',
+    './surveys/route/*.js',
     './formation/route/*.js',
     './schemas/*.js'
   ],

@@ -6,8 +6,14 @@ export const getAllSurveys = async (req, res) => {
     const { status } = req.query;
     const filter = {};
 
+    // Ensure authenticated (defensive) — routes should already ensure it
+    if (!req.user) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+
     // Employees only see active surveys
-    if (req.user.role === 'employee') {
+    const userRole = req.user.role;
+    if (userRole === 'employee') {
       filter.status = 'active';
     } else if (status) {
       filter.status = status;

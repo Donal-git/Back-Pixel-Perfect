@@ -8,7 +8,7 @@ import initSwagger from './swagger.js';
 // Route imports
 import userRoutes       from './auth/route/userRoute.js';
 import departmentRoutes from './auth/route/departmentRoute.js';
-import surveyRoutes     from './sondage/route/surveyRoute.js';
+import surveyRoutes     from './surveys/route/surveyRoute.js';
 import formationRoutes  from './formation/route/formationRoute.js';
 import roleRoutes       from './appConfig/route/roleRoute.js';
 import configRoutes     from './appConfig/route/configRoute.js';
@@ -30,23 +30,42 @@ initSwagger(app);
 
 // API routes
 app.use('/api/users',       userRoutes);
-app.use('/api/departments', departmentRoutes);
+app.use('/api/auth', departmentRoutes);
 app.use('/api/surveys',     surveyRoutes);
-app.use('/api/formations',  formationRoutes);
+app.use('/api/formation',  formationRoutes);
 app.use('/api/roles',       roleRoutes);
-app.use('/api/config',      configRoutes);
+app.use('/api/appConfig',      configRoutes);
 
 app.get('/', (req, res) => res.json({ message: 'API RH opérationnelle', version: '2.0' }));
 
 const PORT = process.env.PORT || 5000;
 
+// const startServer = async () => {
+//   await connectDb();
+//   await seed(); // Initialise les données par défaut si la base est vide
+//   app.listen(PORT, () => {
+//     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+//     console.log(`📚 Swagger disponible sur http://localhost:${PORT}/api-docs`);
+//   });
+// };
+
+
 const startServer = async () => {
-  await connectDb();
-  await seed(); // Initialise les données par défaut si la base est vide
-  app.listen(PORT, () => {
-    console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-    console.log(`📚 Swagger disponible sur http://localhost:${PORT}/api-docs`);
-  });
+  try {
+    await connectDb();
+
+    if(process.env.MODE_ENV !== "production") {
+      await seed(); // Initialise les données par défaut si la base est vide
+      console.log("🌱 seed exécuté (en mode développement)");
+    }
+    app.listen(PORT, () => {
+      console.log(`🚀 Serveur démaré sur http://localhost:${PORT}`);
+      console.log(`📚 Swagger disponible sur http://localhost:${PORT}/api-docs`)
+    })
+  } catch (error) {
+    console.error("❌ Erreur au démarrage du serveur :", error);
+    process.exit(1);
+  }
 };
 
 startServer();

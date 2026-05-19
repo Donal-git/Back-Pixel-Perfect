@@ -10,6 +10,8 @@ import {
 import authMiddleware from '../../midllewares/authMiddleware.js';
 
 const router = express.Router();
+// Toutes les routes sondages nécessitent une authentification
+router.use(authMiddleware());
 
 /**
  * @swagger
@@ -47,7 +49,7 @@ router.get('/', getAllSurveys);
  *       500:
  *         description: Erreur serveur
  */
-router.get('/responses/mine', getEmployeeResponses);
+router.get('/responses/mine', authMiddleware(), getEmployeeResponses);
 
 /**
  * @swagger
@@ -115,7 +117,7 @@ router.get('/:id', getSurveyById);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/', createSurvey);
+router.post('/', authMiddleware(['grh']), createSurvey);
 
 /**
  * @swagger
@@ -150,7 +152,7 @@ router.post('/', createSurvey);
  *       500:
  *         description: Erreur serveur
  */
-router.put('/:id', updateSurvey);
+router.put('/:id', authMiddleware(['grh']), updateSurvey);
 
 /**
  * @swagger
@@ -179,7 +181,7 @@ router.put('/:id', updateSurvey);
  *       500:
  *         description: Erreur serveur
  */
-router.delete('/:id', deleteSurvey);
+router.delete('/:id', authMiddleware(['grh']), deleteSurvey);
 
 /**
  * @swagger
@@ -208,7 +210,7 @@ router.delete('/:id', deleteSurvey);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/:id/send', sendSurvey);
+router.post('/:id/send', authMiddleware(['grh']), sendSurvey);
 
 /**
  * @swagger
@@ -246,7 +248,7 @@ router.post('/:id/send', sendSurvey);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/:id/responses', upsertResponse);
+router.post('/:id/responses', authMiddleware(), upsertResponse);
 
 /**
  * @swagger
@@ -302,6 +304,6 @@ router.get('/:id/responses', authMiddleware(['admin', 'grh']), getSurveyResponse
  *       500:
  *         description: Erreur serveur
  */
-router.get('/:id/responses/mine', getMyResponse);
+router.get('/:id/responses/mine', authMiddleware(), getMyResponse);
 
 export default router;

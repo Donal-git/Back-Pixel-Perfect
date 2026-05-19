@@ -11,6 +11,9 @@ import authMiddleware from '../../midllewares/authMiddleware.js';
 
 const router = express.Router();
 
+// Toutes les routes formation nécessitent une authentification
+router.use(authMiddleware());
+
 /**
  * @swagger
  * /api/formations/my:
@@ -28,7 +31,7 @@ const router = express.Router();
  *       500:
  *         description: Erreur serveur
  */
-router.get('/my', getMyFormations);
+router.get('/my', authMiddleware(), getMyFormations);
 
 /**
  * @swagger
@@ -47,7 +50,7 @@ router.get('/my', getMyFormations);
  *       500:
  *         description: Erreur serveur
  */
-router.get('/', getAllFormations);
+router.get('/', authMiddleware(), getAllFormations);
 
 /**
  * @swagger
@@ -74,7 +77,7 @@ router.get('/', getAllFormations);
  *       500:
  *         description: Erreur serveur
  */
-router.get('/:id', getFormationById);
+router.get('/:id', authMiddleware(), getFormationById);
 
 /**
  * @swagger
@@ -120,7 +123,7 @@ router.get('/:id', getFormationById);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/', createFormation);
+router.post('/', authMiddleware(['grh']), createFormation);
 
 /**
  * @swagger
@@ -155,7 +158,7 @@ router.post('/', createFormation);
  *       500:
  *         description: Erreur serveur
  */
-router.put('/:id', updateFormation);
+router.put('/:id', authMiddleware(['grh']), updateFormation);
 
 /**
  * @swagger
@@ -184,7 +187,7 @@ router.put('/:id', updateFormation);
  *       500:
  *         description: Erreur serveur
  */
-router.delete('/:id', deleteFormation);
+router.delete('/:id', authMiddleware(['grh']), deleteFormation);
 
 /**
  * @swagger
@@ -213,7 +216,7 @@ router.delete('/:id', deleteFormation);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/:id/register', registerForFormation);
+router.post('/:id/register', authMiddleware(), registerForFormation);
 
 /**
  * @swagger
@@ -240,7 +243,7 @@ router.post('/:id/register', registerForFormation);
  *       500:
  *         description: Erreur serveur
  */
-router.delete('/:id/register', unregisterFromFormation);
+router.delete('/:id/register', authMiddleware(), unregisterFromFormation);
 
 /**
  * @swagger
@@ -265,7 +268,7 @@ router.delete('/:id/register', unregisterFromFormation);
  *       500:
  *         description: Erreur serveur
  */
-router.get('/:id/registration', checkRegistration);
+router.get('/:id/registration', authMiddleware(), checkRegistration);
 
 /**
  * @swagger
@@ -294,7 +297,7 @@ router.get('/:id/registration', checkRegistration);
  *       500:
  *         description: Erreur serveur
  */
-router.get('/:id/registrations', getFormationRegistrations);
+router.get('/:id/registrations', authMiddleware(['admin', 'grh']), getFormationRegistrations);
 
 /**
  * @swagger
@@ -335,6 +338,6 @@ router.get('/:id/registrations', getFormationRegistrations);
  *       500:
  *         description: Erreur serveur
  */
-router.patch('/registrations/:regId/status', updateRegistrationStatus);
+router.patch('/registrations/:regId/status', authMiddleware(['admin', 'grh']), updateRegistrationStatus);
 
 export default router;
