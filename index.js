@@ -30,11 +30,11 @@ initSwagger(app);
 
 // API routes
 app.use('/api/users',       userRoutes);
-app.use('/api/auth', departmentRoutes);
+app.use('/api/departments', departmentRoutes);
 app.use('/api/surveys',     surveyRoutes);
 app.use('/api/formation',  formationRoutes);
 app.use('/api/roles',       roleRoutes);
-app.use('/api/appConfig',      configRoutes);
+app.use('/api/config',      configRoutes);
 
 app.get('/', (req, res) => res.json({ message: 'API RH opérationnelle', version: '2.0' }));
 
