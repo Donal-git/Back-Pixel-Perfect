@@ -1,33 +1,38 @@
 import nodemailer from 'nodemailer';
+import { promises as dnsPromises } from 'dns';
 import dotenv from 'dotenv';
-import dns from 'dns';
 
-dns.setDefaultResultOrder('ipv4first');
 dotenv.config();
 
+// Render.com blocks outbound IPv6. Resolve smtp.gmail.com to an IPv4 address
+// explicitly so the socket never tries an IPv6 connection.
+const smtpIp = await dnsPromises
+  .resolve4('smtp.gmail.com')
+  .then((addrs) => addrs[0])
+  .catch(() => 'smtp.gmail.com'); // fallback to hostname if DNS fails
+
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: smtpIp,
   port: 587,
-  secure: false,         // STARTTLS
-  family: 4,             // Force IPv4 socket
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  secure: false, // STARTTLS on port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
+    servername: 'smtp.gmail.com', // required for SNI when host is an IP
     rejectUnauthorized: false,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
-// Check SMTP connectivity at startup
 transporter.verify((error) => {
   if (error) {
     console.error('[emailService] SMTP non disponible:', error.message);
   } else {
-    console.log('[emailService] SMTP Gmail prêt — envoi d\'emails activé');
+    console.log(`[emailService] SMTP Gmail prêt (${smtpIp})`);
   }
 });
 
