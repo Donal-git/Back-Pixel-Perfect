@@ -1,42 +1,56 @@
 import nodemailer from 'nodemailer';
-import { promises as dnsPromises } from 'dns';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Render.com blocks outbound IPv6. Resolve smtp.gmail.com to an IPv4 address
-// explicitly so the socket never tries an IPv6 connection.
-const smtpIp = await dnsPromises
-  .resolve4('smtp.gmail.com')
-  .then((addrs) => addrs[0])
-  .catch(() => 'smtp.gmail.com'); // fallback to hostname if DNS fails
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
+const SMTP_SECURE = process.env.SMTP_SECURE === 'true';
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
-const transporter = nodemailer.createTransport({
-  host: smtpIp,
-  port: 587,
-  secure: false, // STARTTLS on port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    servername: 'smtp.gmail.com', // required for SNI when host is an IP
-    rejectUnauthorized: false,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
-
-transporter.verify((error) => {
-  if (error) {
-    console.error('[emailService] SMTP non disponible:', error.message);
-  } else {
-    console.log(`[emailService] SMTP Gmail prêt (${smtpIp})`);
+const createTransporter = () => {
+  if (!EMAIL_USER || !EMAIL_PASS) {
+    console.warn('[emailService] SMTP non configuré (EMAIL_USER/EMAIL_PASS manquants). Les emails ne seront pas envoyés.');
+    return null;
   }
-});
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
+    },
+    tls: {
+      servername: SMTP_HOST,
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+  });
+
+  transporter.verify()
+    .then(() => {
+      console.log(`[emailService] SMTP prêt (${SMTP_HOST}:${SMTP_PORT})`);
+    })
+    .catch((error) => {
+      console.warn('[emailService] SMTP non disponible:', error.message);
+    });
+
+  return transporter;
+};
+
+const transporter = createTransporter();
 
 export const sendWelcomeEmail = async ({ name, email, password }) => {
+  if (!transporter) {
+    console.warn(`[emailService] E-mail non envoyé à ${email} : SMTP non configuré.`);
+    return;
+  }
+
   const loginUrl = process.env.FRONTEND_URL || 'http://localhost:3000/login';
 
   const html = `
@@ -65,10 +79,15 @@ export const sendWelcomeEmail = async ({ name, email, password }) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `"PixelPerfect RH" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Vos identifiants de connexion — PixelPerfect RH',
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: `"PixelPerfect RH" <${EMAIL_USER}>`,
+      to: email,
+      subject: 'Vos identifiants de connexion — PixelPerfect RH',
+      html,
+    });
+  } catch (error) {
+    console.error('[emailService] Échec de l’envoi de l’e-mail:', error.message);
+    throw error;
+  }
 };
