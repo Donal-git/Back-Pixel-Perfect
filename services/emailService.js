@@ -1,23 +1,38 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-
 import dns from 'dns';
 
 dns.setDefaultResultOrder('ipv4first');
-
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-   family: 4,
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,         // STARTTLS
+  family: 4,             // Force IPv4 socket
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+// Check SMTP connectivity at startup
+transporter.verify((error) => {
+  if (error) {
+    console.error('[emailService] SMTP non disponible:', error.message);
+  } else {
+    console.log('[emailService] SMTP Gmail prêt — envoi d\'emails activé');
+  }
 });
 
 export const sendWelcomeEmail = async ({ name, email, password }) => {
-  const loginUrl = process.env.FRONTEND_URL ;
+  const loginUrl = process.env.FRONTEND_URL || 'http://localhost:3000/login';
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">

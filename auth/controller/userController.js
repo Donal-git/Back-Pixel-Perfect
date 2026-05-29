@@ -39,7 +39,9 @@ export const registerUser = async (req, res) => {
 
     // Send welcome email without blocking the response
     sendWelcomeEmail({ name: resolvedName, email, password: plainPassword }).catch((err) => {
-      console.error('[emailService] Échec envoi email de bienvenue:', err.message);
+      console.error('[emailService] Échec envoi email de bienvenue à', email);
+      console.error('[emailService] Erreur:', err.message);
+      console.error('[emailService] Code:', err.code, '| Response:', err.response);
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
