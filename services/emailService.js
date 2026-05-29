@@ -1,30 +1,37 @@
 import nodemailer from 'nodemailer';
+import { promises as dnsPromises } from 'dns';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SMTP_HOST = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_SECURE = process.env.SMTP_SECURE === 'true';
 const EMAIL_USER = (process.env.EMAIL_USER || '').trim();
 const EMAIL_PASS = (process.env.EMAIL_PASS || '').replace(/\s+/g, '').trim();
 
-const createTransporter = () => {
+const getGmailHost = async () => {
+  try {
+    const addrs = await dnsPromises.resolve4('smtp.gmail.com');
+    return addrs[0] || 'smtp.gmail.com';
+  } catch {
+    return 'smtp.gmail.com';
+  }
+};
+
+const createTransporter = (host, port, secure) => {
   if (!EMAIL_USER || !EMAIL_PASS) {
     console.warn('[emailService] SMTP non configuré (EMAIL_USER/EMAIL_PASS manquants). Les emails ne seront pas envoyés.');
     return null;
   }
 
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
+    host,
+    port,
+    secure,
     auth: {
       user: EMAIL_USER,
       pass: EMAIL_PASS,
     },
     tls: {
-      servername: SMTP_HOST,
+      servername: 'smtp.gmail.com',
       rejectUnauthorized: false,
     },
     connectionTimeout: 30000,
@@ -33,10 +40,14 @@ const createTransporter = () => {
   });
 };
 
-const transporter = createTransporter();
-
 export const sendWelcomeEmail = async ({ name, email, password }) => {
-  if (!transporter) {
+  const gmailHost = await getGmailHost();
+  const transporters = [
+    createTransporter(gmailHost, 587, false),
+    createTransporter(gmailHost, 465, true),
+  ].filter(Boolean);
+
+  if (transporters.length === 0) {
     console.warn(`[emailService] E-mail non envoyé à ${email} : SMTP non configuré.`);
     return;
   }
@@ -69,15 +80,23 @@ export const sendWelcomeEmail = async ({ name, email, password }) => {
     </div>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: `"PixelPerfect RH" <${EMAIL_USER}>`,
-      to: email,
-      subject: 'Vos identifiants de connexion — PixelPerfect RH',
-      html,
-    });
-  } catch (error) {
-    console.error('[emailService] Échec de l’envoi de l’e-mail:', error.message);
-    throw error;
+  let lastError;
+
+  for (const transporter of transporters) {
+    try {
+      await transporter.sendMail({
+        from: `"PixelPerfect RH" <${EMAIL_USER}>`,
+        to: email,
+        subject: 'Vos identifiants de connexion — PixelPerfect RH',
+        html,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      console.warn(`[emailService] SMTP tentative échouée (${transporter.options.host}:${transporter.options.port}) : ${error.message}`);
+    }
   }
+
+  console.error('[emailService] Échec de l’envoi de l’e-mail:', lastError?.message || 'Erreur inconnue');
+  throw lastError;
 };
