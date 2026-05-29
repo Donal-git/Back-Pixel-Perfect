@@ -2,6 +2,7 @@ import User from '../model/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { sendWelcomeEmail } from '../../services/emailService.js';
 
 dotenv.config();
 
@@ -35,6 +36,11 @@ export const registerUser = async (req, res) => {
     });
 
     res.status(201).json({ data: true, user: user.toJSON() });
+
+    // Send welcome email without blocking the response
+    sendWelcomeEmail({ name: resolvedName, email, password }).catch((err) => {
+      console.error('[emailService] Échec envoi email de bienvenue:', err.message);
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
