@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendWelcomeEmail = async ({ name, email, password }) => {
-  const loginUrl = process.env.FRONTEND_URL || 'http://localhost:3000/login';
+  const loginUrl = process.env.FRONTEND_URL ;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">
