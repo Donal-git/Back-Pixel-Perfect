@@ -8,12 +8,12 @@ dotenv.config();
 
 // ─── Register (create personnel member) ─────────────────────────────────────
 export const registerUser = async (req, res) => {
-  const { username, name, email, phone = '', password, department, poste, position, role, status } = req.body;
+  const { username, name, email, phone = '', password: plainPassword, department, poste, position, role, status } = req.body;
   const resolvedName = name || username;
   const resolvedPosition = position || poste;
 
   try {
-    if (!resolvedName || !email || !password || !department || !resolvedPosition) {
+    if (!resolvedName || !email || !plainPassword || !department || !resolvedPosition) {
       return res.status(400).json({ message: 'Champs obligatoires manquants' });
     }
 
@@ -22,7 +22,7 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Cet email est déjà utilisé' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     const user = await User.create({
       name: resolvedName,
@@ -38,7 +38,7 @@ export const registerUser = async (req, res) => {
     res.status(201).json({ data: true, user: user.toJSON() });
 
     // Send welcome email without blocking the response
-    sendWelcomeEmail({ name: resolvedName, email, password }).catch((err) => {
+    sendWelcomeEmail({ name: resolvedName, email, password: plainPassword }).catch((err) => {
       console.error('[emailService] Échec envoi email de bienvenue:', err.message);
     });
   } catch (error) {
