@@ -3,11 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_HOST = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
 const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
 const SMTP_SECURE = process.env.SMTP_SECURE === 'true';
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_USER = (process.env.EMAIL_USER || '').trim();
+const EMAIL_PASS = (process.env.EMAIL_PASS || '').replace(/\s+/g, '').trim();
 
 const createTransporter = () => {
   if (!EMAIL_USER || !EMAIL_PASS) {
@@ -15,7 +15,7 @@ const createTransporter = () => {
     return null;
   }
 
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
@@ -27,20 +27,10 @@ const createTransporter = () => {
       servername: SMTP_HOST,
       rejectUnauthorized: false,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
   });
-
-  transporter.verify()
-    .then(() => {
-      console.log(`[emailService] SMTP prêt (${SMTP_HOST}:${SMTP_PORT})`);
-    })
-    .catch((error) => {
-      console.warn('[emailService] SMTP non disponible:', error.message);
-    });
-
-  return transporter;
 };
 
 const transporter = createTransporter();
