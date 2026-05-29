@@ -1,54 +1,18 @@
-import nodemailer from 'nodemailer';
-import { promises as dnsPromises } from 'dns';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
-const EMAIL_USER = (process.env.EMAIL_USER || '').trim();
-const EMAIL_PASS = (process.env.EMAIL_PASS || '').replace(/\s+/g, '').trim();
+const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
+const SENDER_EMAIL = (process.env.EMAIL_USER || '').trim();
 
-const getGmailHost = async () => {
-  try {
-    const addrs = await dnsPromises.resolve4('smtp.gmail.com');
-    return addrs[0] || 'smtp.gmail.com';
-  } catch {
-    return 'smtp.gmail.com';
-  }
-};
-
-const createTransporter = (host, port, secure) => {
-  if (!EMAIL_USER || !EMAIL_PASS) {
-    console.warn('[emailService] SMTP non configuré (EMAIL_USER/EMAIL_PASS manquants). Les emails ne seront pas envoyés.');
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASS,
-    },
-    tls: {
-      servername: 'smtp.gmail.com',
-      rejectUnauthorized: false,
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  });
-};
+if (!BREVO_API_KEY) {
+  console.warn('[emailService] BREVO_API_KEY manquant — les emails ne seront pas envoyés.');
+} else {
+  console.log('[emailService] Brevo HTTP API configuré — envoi d\'emails activé');
+}
 
 export const sendWelcomeEmail = async ({ name, email, password }) => {
-  const gmailHost = await getGmailHost();
-  const transporters = [
-    createTransporter(gmailHost, 587, false),
-    createTransporter(gmailHost, 465, true),
-  ].filter(Boolean);
-
-  if (transporters.length === 0) {
-    console.warn(`[emailService] E-mail non envoyé à ${email} : SMTP non configuré.`);
+  if (!BREVO_API_KEY) {
+    console.warn(`[emailService] Email non envoyé à ${email} : BREVO_API_KEY non configuré.`);
     return;
   }
 
@@ -80,23 +44,24 @@ export const sendWelcomeEmail = async ({ name, email, password }) => {
     </div>
   `;
 
-  let lastError;
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: 'PixelPerfect RH', email: SENDER_EMAIL },
+      to: [{ email, name }],
+      subject: 'Vos identifiants de connexion — PixelPerfect RH',
+      htmlContent: html,
+    }),
+  });
 
-  for (const transporter of transporters) {
-    try {
-      await transporter.sendMail({
-        from: `"PixelPerfect RH" <${EMAIL_USER}>`,
-        to: email,
-        subject: 'Vos identifiants de connexion — PixelPerfect RH',
-        html,
-      });
-      return;
-    } catch (error) {
-      lastError = error;
-      console.warn(`[emailService] SMTP tentative échouée (${transporter.options.host}:${transporter.options.port}) : ${error.message}`);
-    }
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(`Brevo ${response.status}: ${body.message || 'Erreur inconnue'}`);
   }
 
-  console.error('[emailService] Échec de l’envoi de l’e-mail:', lastError?.message || 'Erreur inconnue');
-  throw lastError;
+  console.log(`[emailService] Email envoyé avec succès à ${email}`);
 };
