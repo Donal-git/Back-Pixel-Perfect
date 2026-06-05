@@ -18,7 +18,7 @@ const formationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['disponible', 'en_cours', 'terminée'],
+      enum: ['brouillon', 'disponible', 'en_cours', 'terminée'],
       default: 'disponible'
     },
     departments: [{ type: String }],
