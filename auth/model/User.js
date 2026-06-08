@@ -17,6 +17,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['actif', 'inactif'],
       default: 'actif'
+    },
+    isDemoData: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
   {

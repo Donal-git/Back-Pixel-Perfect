@@ -28,7 +28,12 @@ const surveySchema = new mongoose.Schema(
     },
     questions: [questionSchema],
     sent_to: [{ type: String }], // department names
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    isDemoData: {
+      type: Boolean,
+      default: false,
+      index: true
+    }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updatedAt' },

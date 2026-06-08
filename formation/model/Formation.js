@@ -23,7 +23,12 @@ const formationSchema = new mongoose.Schema(
     },
     departments: [{ type: String }],
     participants: { type: Number, default: 0 },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    isDemoData: {
+      type: Boolean,
+      default: false,
+      index: true
+    }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updatedAt' },

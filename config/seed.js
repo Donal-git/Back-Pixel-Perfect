@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import 'dotenv/config.js';
 import User from '../auth/model/User.js';
 import Department from '../auth/model/Departments.js';
 import Role from '../appConfig/model/Role.js';
@@ -48,9 +49,9 @@ const DEFAULT_ROLES = [
 
 // ─── Test accounts (matches frontend fakeUsers) ───────────────────────────────
 const TEST_USERS = [
-  { name: 'Admin Principal',   email: 'admin@test.com',    password: 'admin123',    role: 'admin',    department: 'Direction', position: 'Administrateur Système' },
-  { name: 'Responsable GRH',  email: 'grh@test.com',      password: 'grh123',      role: 'grh',      department: 'RH',        position: 'Responsable RH' },
-  { name: 'Employé Standard', email: 'employee@test.com', password: 'employee123', role: 'employee', department: 'IT',        position: 'Employé' }
+  { name: 'Admin Principal',   email: 'admin@test.com',    password: 'admin123',    role: 'admin',    department: 'Direction', position: 'Administrateur Système', isDemoData: true },
+  { name: 'Responsable GRH',  email: 'grh@test.com',      password: 'grh123',      role: 'grh',      department: 'RH',        position: 'Responsable RH', isDemoData: true },
+  { name: 'Employé Standard', email: 'employee@test.com', password: 'employee123', role: 'employee', department: 'IT',        position: 'Employé', isDemoData: true }
 ];
 
 // ─── Demo surveys ─────────────────────────────────────────────────────────────
@@ -63,7 +64,8 @@ const DEMO_SURVEYS = [
     questions: [
       { id: 'q1', question_text: 'Comment évaluez-vous votre satisfaction globale ?', question_type: 'likert', options: [], is_required: true }
     ],
-    sent_to: ['RH', 'Finance', 'IT']
+    sent_to: ['RH', 'Finance', 'IT'],
+    isDemoData: true
   },
   {
     title: 'Évaluation annuelle des compétences',
@@ -71,7 +73,8 @@ const DEMO_SURVEYS = [
     isAnonymous: false,
     status: 'draft',
     questions: [],
-    sent_to: []
+    sent_to: [],
+    isDemoData: true
   }
 ];
 
@@ -85,7 +88,8 @@ const DEMO_FORMATIONS = [
     level: 'avancé',
     status: 'disponible',
     departments: ['Finance', 'RH'],
-    participants: 32
+    participants: 32,
+    isDemoData: true
   },
   {
     title: "Management d'équipe",
@@ -95,7 +99,8 @@ const DEMO_FORMATIONS = [
     level: 'intermédiaire',
     status: 'en_cours',
     departments: ['Tous les départements'],
-    participants: 25
+    participants: 25,
+    isDemoData: true
   },
   {
     title: 'Communication professionnelle',
@@ -105,7 +110,8 @@ const DEMO_FORMATIONS = [
     level: 'débutant',
     status: 'disponible',
     departments: ['Commercial', 'RH', 'Direction'],
-    participants: 18
+    participants: 18,
+    isDemoData: true
   },
   {
     title: 'Gestion de projet Agile',
@@ -115,12 +121,21 @@ const DEMO_FORMATIONS = [
     level: 'intermédiaire',
     status: 'disponible',
     departments: ['IT', 'Commercial'],
-    participants: 15
+    participants: 15,
+    isDemoData: true
   }
 ];
 
 // ─── Main seed function ───────────────────────────────────────────────────────
 const seed = async () => {
+  // Vérifier si le seeding est activé
+  const shouldSeed = process.env.SEED_DATABASE !== 'false';
+  
+  if (!shouldSeed) {
+    console.log('⏭️  Seeding désactivé (SEED_DATABASE=false)');
+    return;
+  }
+
   try {
     // Departments
     const deptCount = await Department.countDocuments();
@@ -150,23 +165,23 @@ const seed = async () => {
     if (userCount === 0) {
       for (const u of TEST_USERS) {
         const hashed = await bcrypt.hash(u.password, 10);
-        await User.create({ ...u, password: hashed, status: 'actif' });
+        await User.create({ ...u, password: hashed, status: 'actif', isDemoData: true });
       }
-      console.log('✅ Comptes de test initialisés');
+      console.log('✅ Comptes de test initialisés (marqués comme démo)');
     }
 
     // Demo surveys
     const surveyCount = await Survey.countDocuments();
     if (surveyCount === 0) {
       await Survey.insertMany(DEMO_SURVEYS);
-      console.log('✅ Sondages de démonstration initialisés');
+      console.log('✅ Sondages de démonstration initialisés (marqués comme démo)');
     }
 
     // Demo formations
     const formationCount = await Formation.countDocuments();
     if (formationCount === 0) {
       await Formation.insertMany(DEMO_FORMATIONS);
-      console.log('✅ Formations de démonstration initialisées');
+      console.log('✅ Formations de démonstration initialisées (marquées comme démo)');
     }
 
   } catch (error) {
@@ -174,4 +189,21 @@ const seed = async () => {
   }
 };
 
+// ─── Clean demo data function ──────────────────────────────────────────────────
+const cleanDemoData = async () => {
+  try {
+    const userResult = await User.deleteMany({ isDemoData: true });
+    const surveyResult = await Survey.deleteMany({ isDemoData: true });
+    const formationResult = await Formation.deleteMany({ isDemoData: true });
+
+    console.log(`\n🧹 Nettoyage des données de démo complété :`);
+    console.log(`   - ${userResult.deletedCount} utilisateurs supprimés`);
+    console.log(`   - ${surveyResult.deletedCount} sondages supprimés`);
+    console.log(`   - ${formationResult.deletedCount} formations supprimées\n`);
+  } catch (error) {
+    console.error('❌ Erreur lors du nettoyage:', error.message);
+  }
+};
+
+export { seed, cleanDemoData };
 export default seed;
