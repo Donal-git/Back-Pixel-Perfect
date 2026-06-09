@@ -5,7 +5,7 @@ import {
 } from '../controller/surveyController.js';
 import {
   upsertResponse, getMyResponse,
-  getSurveyResponses, getEmployeeResponses
+  getSurveyResponses, getEmployeeResponses, getAllResponses
 } from '../controller/surveyResponseController.js';
 import authMiddleware from '../../midllewares/authMiddleware.js';
 
@@ -50,6 +50,39 @@ router.get('/', getAllSurveys);
  *         description: Erreur serveur
  */
 router.get('/responses/mine', authMiddleware(), getEmployeeResponses);
+
+/**
+ * @swagger
+ * /api/surveys/responses:
+ *   get:
+ *     summary: Toutes les réponses à tous les sondages (admin/grh)
+ *     tags:
+ *       - Sondages
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: survey_id
+ *         schema:
+ *           type: string
+ *         description: Filtrer par sondage
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, submitted]
+ *         description: Filtrer par statut
+ *     responses:
+ *       200:
+ *         description: Liste de toutes les réponses
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès refusé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get('/responses', authMiddleware(['admin', 'grh']), getAllResponses);
 
 /**
  * @swagger

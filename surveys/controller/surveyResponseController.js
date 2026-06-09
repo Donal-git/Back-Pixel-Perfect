@@ -50,6 +50,20 @@ export const getSurveyResponses = async (req, res) => {
   }
 };
 
+// ─── Get all responses across all surveys (admin/grh) ────────────────────────
+export const getAllResponses = async (req, res) => {
+  try {
+    const filter = {};
+    if (req.query.survey_id) filter.survey_id   = req.query.survey_id;
+    if (req.query.status)    filter.status       = req.query.status;
+
+    const responses = await SurveyResponse.find(filter);
+    res.status(200).json({ data: responses.map(r => r.toJSON()) });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ─── Get all responses from the connected employee ───────────────────────────
 export const getEmployeeResponses = async (req, res) => {
   try {
