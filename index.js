@@ -12,7 +12,8 @@ import surveyRoutes     from './surveys/route/surveyRoute.js';
 import formationRoutes  from './formation/route/formationRoute.js';
 import roleRoutes       from './appConfig/route/roleRoute.js';
 import configRoutes     from './appConfig/route/configRoute.js';
-import documentRoutes   from './documents/route/documentRoute.js';
+import documentRoutes            from './documents/route/documentRoute.js';
+import registrationRequestRoutes from './registrationRequests/route/registrationRequestRoute.js';
 
 dotenv.config();
 
@@ -36,7 +37,8 @@ app.use('/api/surveys',     surveyRoutes);
 app.use('/api/formation',  formationRoutes);
 app.use('/api/roles',       roleRoutes);
 app.use('/api/config',      configRoutes);
-app.use('/api/documents',   documentRoutes);
+app.use('/api/documents',              documentRoutes);
+app.use('/api/registration-requests', registrationRequestRoutes);
 
 app.get('/', (req, res) => res.json({ message: 'API RH opérationnelle', version: '2.0' }));
 

@@ -42,6 +42,7 @@ const options = {
     './surveys/route/*.js',
     './formation/route/*.js',
     './documents/route/*.js',
+    './registrationRequests/route/*.js',
     './schemas/*.js'
   ],
 };
