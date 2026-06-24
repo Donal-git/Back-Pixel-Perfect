@@ -109,8 +109,6 @@ router.get("/", authMiddleware(), getAllDepartments);
  *     summary: Liste des départements actifs
  *     tags:
  *       - Départements
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Départements actifs
@@ -123,12 +121,10 @@ router.get("/", authMiddleware(), getAllDepartments);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Department'
- *       401:
- *         description: Non authentifié
  *       500:
  *         description: Erreur serveur
  */
-router.get("/active", authMiddleware(), departmentActive);
+router.get("/active", departmentActive);
 
 /**
  * @swagger
