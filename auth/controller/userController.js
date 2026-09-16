@@ -50,14 +50,26 @@ export const registerUser = async (req, res) => {
 
 // ─── Login ───────────────────────────────────────────────────────────────────
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, email, phone, password } = req.body;
+  const loginValue = [identifier, email, phone]
+    .find(value => typeof value === 'string' && value.trim())
+    ?.trim();
 
   try {
-    if (!email || !password) {
+    if (!loginValue || typeof password !== 'string' || !password) {
       return res.status(400).json({ message: 'Email et mot de passe requis' });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const escapedLoginValue = loginValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const phoneDigits = loginValue.replace(/\D/g, '');
+    const phonePattern = phoneDigits
+      ? new RegExp(`^\\+?[\\s().-]*${phoneDigits.split('').join('[\\s().-]*')}$`)
+      : null;
+    const loginFilters = [{ email: new RegExp(`^${escapedLoginValue}$`, 'i') }];
+
+    if (phonePattern) loginFilters.push({ phone: phonePattern });
+
+    const user = await User.findOne({ $or: loginFilters }).select('+password');
     if (!user) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }

@@ -26,12 +26,17 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - email
  *               - password
  *             properties:
+ *               identifier:
+ *                 type: string
+ *                 description: Adresse email ou numéro de téléphone
  *               email:
  *                 type: string
- *                 format: email
+ *                 description: Adresse email (alternative à identifier)
+ *               phone:
+ *                 type: string
+ *                 description: Numéro de téléphone (alternative à identifier)
  *               password:
  *                 type: string
  *                 format: password

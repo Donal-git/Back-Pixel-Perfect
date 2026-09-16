@@ -88,13 +88,18 @@
  *     LoginRequest:
  *       type: object
  *       required:
- *         - email
  *         - password
  *       properties:
+ *         identifier:
+ *           type: string
+ *           description: Adresse email ou numéro de téléphone
+ *           example: admin@test.com
  *         email:
  *           type: string
- *           format: email
- *           example: admin@test.com
+ *           description: Adresse email (alternative à identifier)
+ *         phone:
+ *           type: string
+ *           description: Numéro de téléphone (alternative à identifier)
  *         password:
  *           type: string
  *           format: password
