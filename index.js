@@ -57,7 +57,7 @@ const startServer = async () => {
   try {
     await connectDb();
 
-    if(process.env.MODE_ENV !== "production") {
+    if(process.env.NODE_ENV !== "production") {
       await seed(); // Initialise les données par défaut si la base est vide
       console.log("🌱 seed exécuté (en mode développement)");
     }
